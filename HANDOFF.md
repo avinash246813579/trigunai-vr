@@ -39,7 +39,7 @@ Serve the repo contents at `/vr/`, with the unzipped `hls/` folder next to
 trigunai.com/vr/
 ├── index.html
 ├── css/style.css
-├── js/ (config.js, main.js, videoSphere.js, desktopControls.js)
+├── js/ (config.js, main.js, videoSphere.js, desktopControls.js, diagnostics.js)
 └── hls/
     ├── master.m3u8          ← the player loads this
     ├── v0.m3u8 … v3.m3u8    ← per-quality playlists
@@ -53,9 +53,13 @@ configuration is required**.
 
 ## 2. Deploy steps
 
-1. **Get the code:** `git clone https://github.com/avinash246813579/trigunai-vr.git`
-2. **Get the stream:** download `hls.zip` from this repo's latest **Release** and
-   unzip it into the project root so you have a `hls/` folder next to `index.html`.
+1. **Get the code (latest `main`):**
+   `git clone https://github.com/avinash246813579/trigunai-vr.git`
+   (If you cloned earlier, `git pull` — the player was tuned for smooth streaming.)
+2. **Get the stream:** download `hls.zip` from this repo's latest **Release**
+   ([v2.0.0](https://github.com/avinash246813579/trigunai-vr/releases/tag/v2.0.0))
+   and unzip it into the project root so you have a `hls/` folder next to
+   `index.html`.
 3. **Publish under `/vr/`:** copy the folder contents to wherever `trigunai.com`
    serves static files, under `/vr/`. `index.html` must be the directory index.
 4. **Verify** (see §4).
