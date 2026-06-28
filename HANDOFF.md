@@ -57,9 +57,9 @@ configuration is required**.
    `git clone https://github.com/avinash246813579/trigunai-vr.git`
    (If you cloned earlier, `git pull` — the player was tuned for smooth streaming.)
 2. **Get the stream:** download `hls.zip` from this repo's latest **Release**
-   ([v2.0.0](https://github.com/avinash246813579/trigunai-vr/releases/tag/v2.0.0))
+   ([v3.0.0](https://github.com/avinash246813579/trigunai-vr/releases/tag/v3.0.0))
    and unzip it into the project root so you have a `hls/` folder next to
-   `index.html`.
+   `index.html` (replacing any older `hls/`).
 3. **Publish under `/vr/`:** copy the folder contents to wherever `trigunai.com`
    serves static files, under `/vr/`. `index.html` must be the directory index.
 4. **Verify** (see §4).
