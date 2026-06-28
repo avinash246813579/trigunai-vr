@@ -66,15 +66,17 @@ export function attachVideoSource(video, config, onError = () => {}) {
     const hls = new Hls({
       // Keep full 360° detail: don't cap quality to the on-screen element size.
       capLevelToPlayerSize: false,
-      // Buffer a solid runway so a throughput dip can't stall playback, but
-      // not so much that 4K segments exceed the browser's MSE memory quota
-      // (which throws bufferFullError and pressures the Quest's limited RAM).
-      // hls.js also caps by bytes (maxBufferSize, ~60 MB) — so at lower quality
-      // this naturally buffers many more seconds, exactly when the network is
-      // weak and a deep buffer matters most.
-      maxBufferLength: 30, // target seconds buffered ahead
-      maxMaxBufferLength: 120,
-      backBufferLength: 30, // keep memory footprint modest on the headset
+      // Cap the forward buffer by BYTES, not just seconds. At the 5760×2880
+      // top rung (~43 Mbps) a 30 s buffer would be ~150 MB and exceed the
+      // browser's MSE memory quota (bufferFullError + RAM pressure on the
+      // headset). A byte cap gives a short buffer at high bitrate — fine, since
+      // a connection fast enough for 5.7K refills instantly — and automatically
+      // a much deeper buffer (in seconds) at lower bitrates, which is exactly
+      // when the network is weak and a deep runway matters most.
+      maxBufferSize: 60 * 1000 * 1000,
+      maxBufferLength: 24, // forward runway (seconds); deep enough to ride dips
+      maxMaxBufferLength: 48,
+      backBufferLength: 12, // keep memory footprint modest on the headset
       // Don't begin from the most pessimistic bandwidth guess (which makes the
       // opening seconds look low-res); start around 5 Mbps and let ABR climb.
       abrEwmaDefaultEstimate: 5000000,

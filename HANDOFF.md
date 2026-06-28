@@ -23,7 +23,7 @@ Three pieces:
 | Piece | Where it comes from | Size |
 | ----- | ------------------- | ---- |
 | **The app** (HTML/CSS/JS) | This GitHub repo | ~40 KB |
-| **The HLS stream** (`hls/` folder: `master.m3u8` + `v0–v3` playlists + `.ts` segments) | GitHub **Release** asset `hls.zip` | ~300 MB |
+| **The HLS stream** (`hls/` folder: `master.m3u8` + `v0–v4` playlists + `.ts` segments) | GitHub **Release** asset `hls.zip` | ~480 MB |
 | **`hls.js`** player library | jsDelivr CDN (already referenced in `index.html`) | loads at runtime |
 
 The HLS folder is **not** in the git repo (hundreds of segment files). It's
@@ -42,7 +42,7 @@ trigunai.com/vr/
 ├── js/ (config.js, main.js, videoSphere.js, desktopControls.js, diagnostics.js)
 └── hls/
     ├── master.m3u8          ← the player loads this
-    ├── v0.m3u8 … v3.m3u8    ← per-quality playlists
+    ├── v0.m3u8 … v4.m3u8    ← per-quality playlists (1280×640 … 5760×2880)
     └── v0_000.ts, …         ← video segments (~4 s each)
 ```
 

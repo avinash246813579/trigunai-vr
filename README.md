@@ -56,31 +56,46 @@ The master is **`mmun-bkk-360-test-1.mp4`** (H.264, 5760×2880 equirectangular,
 sources are used instead (both gitignored; shipped as GitHub Release assets):
 
 **1. HLS adaptive stream (preferred — `hls/master.m3u8`).** Streams like YouTube:
-short segments at four quality levels, the player auto-switches to fit bandwidth,
-so it starts fast and doesn't stall. This is what `config.js` points at by
-default. Rebuild it from a master with:
+short segments at **five** quality levels, the player auto-switches to fit
+bandwidth, so it starts fast and doesn't stall. This is what `config.js` points
+at by default. The ladder tops out at the master's **native 5760×2880** so strong
+connections get full sharpness; weaker ones fall back automatically:
+
+| Rung | Resolution | ~Bitrate |
+|------|------------|----------|
+| v0 | 1280×640  | 2.5 Mbps |
+| v1 | 1920×960  | 5 Mbps   |
+| v2 | 2880×1440 | 10 Mbps  |
+| v3 | 4096×2048 | 20 Mbps  |
+| v4 | 5760×2880 | 36 Mbps  |
+
+Rebuild it from a master with:
 
 ```bash
 mkdir -p hls
 ffmpeg -y -i mmun-bkk-360-test-1.mp4 \
-  -filter_complex "[0:v]split=4[a][b][c][d];\
-[a]scale=1280:640[v0];[b]scale=1920:960[v1];[c]scale=2880:1440[v2];[d]scale=4096:2048[v3]" \
-  -map "[v0]" -map "[v1]" -map "[v2]" -map "[v3]" -map 0:a -map 0:a -map 0:a -map 0:a \
+  -filter_complex "[0:v]split=5[a][b][c][d][e];\
+[a]scale=1280:640[v0];[b]scale=1920:960[v1];[c]scale=2880:1440[v2];[d]scale=4096:2048[v3];[e]scale=5760:2880[v4]" \
+  -map "[v0]" -map "[v1]" -map "[v2]" -map "[v3]" -map "[v4]" \
+  -map 0:a -map 0:a -map 0:a -map 0:a -map 0:a \
   -c:v libx264 -preset fast -pix_fmt yuv420p -g 120 -keyint_min 120 -sc_threshold 0 \
   -force_key_frames "expr:gte(t,n_forced*4)" \
-  -b:v:0 2500k -maxrate:v:0 2675k -bufsize:v:0 3750k \
-  -b:v:1 5000k -maxrate:v:1 5350k -bufsize:v:1 7500k \
+  -b:v:0 2500k  -maxrate:v:0 2675k  -bufsize:v:0 3750k \
+  -b:v:1 5000k  -maxrate:v:1 5350k  -bufsize:v:1 7500k \
   -b:v:2 10000k -maxrate:v:2 10700k -bufsize:v:2 15000k \
   -b:v:3 20000k -maxrate:v:3 21400k -bufsize:v:3 30000k \
+  -b:v:4 36000k -maxrate:v:4 42000k -bufsize:v:4 72000k \
   -c:a aac -b:a 128k -ac 2 \
   -f hls -hls_time 4 -hls_playlist_type vod -hls_flags independent_segments \
   -hls_segment_filename "hls/v%v_%03d.ts" -master_pl_name master.m3u8 \
-  -var_stream_map "v:0,a:0 v:1,a:1 v:2,a:2 v:3,a:3" "hls/v%v.m3u8"
+  -var_stream_map "v:0,a:0 v:1,a:1 v:2,a:2 v:3,a:3 v:4,a:4" "hls/v%v.m3u8"
 ```
 
 The 4 s segments are keyframe-aligned across renditions so the player can switch
-quality cleanly. Adjust the bitrate ladder to taste — for 360° monoscopic video
-the top rung can sit lower than you'd expect (~20 Mbps at 4K still looks sharp).
+quality cleanly. Adding higher rungs is stall-safe: ABR only serves a rung the
+connection can sustain, so the top rung raises the ceiling without affecting weak
+networks. Note the 5760-wide rung decodes fine on **Quest 3** but is near
+**Quest 2**'s decoder limit.
 
 **2. Single-file MP4 fallback (`mmun-bkk-360-web.mp4`).** A simpler progressive
 file, only needed if you can't host HLS. It can stall on slow networks (fixed
@@ -104,15 +119,18 @@ WebXR and video textures require the page to be served over **HTTPS** or from
 Pick any static server:
 
 ```bash
-# Python 3 (already on most machines)
-python -m http.server 8000
+# Recommended: bundled dev server — adds no-store caching and correct HLS
+# MIME types so local testing matches production (and edits show up immediately)
+python serve.py
 
-# or Node
+# or any plain static server
+python -m http.server 8000
 npx serve .
 ```
 
 Then open <http://localhost:8000>. Click **Start** to begin playback; on
-desktop, click-and-drag to look around.
+desktop, click-and-drag to look around. Append **`?debug=1`** to see the live
+diagnostics overlay.
 
 ### Testing on a Meta Quest
 
