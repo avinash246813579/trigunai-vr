@@ -55,20 +55,29 @@ export function attachVideoSource(video, config, onError = () => {}) {
     return { hls: null };
   }
 
-  // Safari / iOS can play HLS natively — prefer that and skip hls.js.
-  if (video.canPlayType("application/vnd.apple.mpegurl")) {
-    video.src = url;
-    return { hls: null };
-  }
+  const Hls = window.Hls;
 
-  // Chromium (Quest Browser, desktop Chrome/Edge): use hls.js over MSE.
-  if (typeof window.Hls !== "undefined" && window.Hls.isSupported()) {
-    const hls = new window.Hls({
+  // Prefer hls.js whenever the browser supports Media Source Extensions
+  // (Quest Browser, Chrome, Edge). It lets us control buffering and adaptive
+  // switching — important on the headset, where the browser's *native* HLS (if
+  // any) tends to pick conservative quality and stall. Native HLS is only used
+  // as a fallback for browsers without MSE (e.g. Safari/iOS).
+  if (typeof Hls !== "undefined" && Hls.isSupported()) {
+    const hls = new Hls({
       // Keep full 360° detail: don't cap quality to the on-screen element size.
       capLevelToPlayerSize: false,
-      // Buffer a healthy runway ahead so brief Wi-Fi dips don't cause stalls.
-      maxBufferLength: 30,
+      // Buffer a solid runway so a throughput dip can't stall playback, but
+      // not so much that 4K segments exceed the browser's MSE memory quota
+      // (which throws bufferFullError and pressures the Quest's limited RAM).
+      // hls.js also caps by bytes (maxBufferSize, ~60 MB) — so at lower quality
+      // this naturally buffers many more seconds, exactly when the network is
+      // weak and a deep buffer matters most.
+      maxBufferLength: 30, // target seconds buffered ahead
       maxMaxBufferLength: 120,
+      backBufferLength: 30, // keep memory footprint modest on the headset
+      // Don't begin from the most pessimistic bandwidth guess (which makes the
+      // opening seconds look low-res); start around 5 Mbps and let ABR climb.
+      abrEwmaDefaultEstimate: 5000000,
     });
 
     hls.loadSource(url);
@@ -92,6 +101,12 @@ export function attachVideoSource(video, config, onError = () => {}) {
     });
 
     return { hls };
+  }
+
+  // Fallback: native HLS (Safari / iOS, which can't run hls.js).
+  if (video.canPlayType("application/vnd.apple.mpegurl")) {
+    video.src = url;
+    return { hls: null };
   }
 
   // No HLS support at all.

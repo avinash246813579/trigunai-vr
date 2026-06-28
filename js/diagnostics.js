@@ -62,6 +62,11 @@ export function initDiagnostics(video, hls, config) {
     return `${lv.width}×${lv.height} @ ${Math.round(lv.bitrate / 1000)}kbps`;
   }
 
+  function bandwidthEstimate() {
+    if (!hls || !Hls || !hls.bandwidthEstimate) return "—";
+    return Math.round(hls.bandwidthEstimate / 1000) + " kbps";
+  }
+
   function playState() {
     if (video.error) return "ERROR";
     if (video.paused) return "paused";
@@ -78,6 +83,7 @@ export function initDiagnostics(video, hls, config) {
       ["time", `${video.currentTime.toFixed(1)}s / ${isFinite(video.duration) ? video.duration.toFixed(1) : "?"}s`],
       ["buffered ahead", bufferedAhead()],
       ["quality", currentLevel()],
+      ["bandwidth est", bandwidthEstimate()],
       ["readyState", String(video.readyState)],
     ];
     stateEl.innerHTML = rows
