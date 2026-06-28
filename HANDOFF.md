@@ -83,9 +83,13 @@ Segments and playlists are immutable for this VOD, so cache them hard; keep
 # hls/*.ts and hls/*.m3u8
 Cache-Control: public, max-age=31536000, immutable
 
-# index.html
+# index.html, and css/ + js/ (so app updates aren't masked by stale caches)
 Cache-Control: no-cache
 ```
+
+> Stale cached `css/`/`js/` is a common reason a site "works locally but behaves
+> differently / doesn't update after deploy." Keep those revalidated as above
+> (or version them), and hard-refresh when testing a new deploy.
 
 ---
 
@@ -103,6 +107,15 @@ start within a second or two (low quality first, sharpening as it ramps up).
 
 If **Enter VR** is greyed out → the page isn't on HTTPS. If it stalls or won't
 play → check the `.m3u8`/`.ts` MIME types (§3) first.
+
+### On-screen debugger (`?debug=1`)
+
+Devtools aren't available in the Quest Browser, so if the deployed stream
+misbehaves, open **`https://trigunai.com/vr/?debug=1`**. A live panel (top-left)
+shows the source URL, whether hls.js is active, play state, seconds buffered,
+current quality, and a color-coded log of every hls.js / video error — so you can
+see the exact failure (bad MIME, CORS, 404-as-HTML, etc.) on the headset itself.
+It's hidden for normal visitors.
 
 ---
 
