@@ -138,3 +138,77 @@ canvas {
   opacity: 0;
   pointer-events: none;
 }
+
+/* --- Diagnostics overlay (?debug=1 only) -------------------------------- */
+#debug-panel {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 50;
+  width: min(360px, 80vw);
+  max-height: 80vh;
+  overflow: hidden;
+  padding: 10px 12px;
+  background: rgba(8, 11, 18, 0.88);
+  border: 1px solid #2c3a4d;
+  border-radius: 10px;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #cdd6e3;
+  pointer-events: none; /* never block interaction with the scene */
+}
+
+#debug-panel .dbg-title {
+  font-weight: 700;
+  color: #5ad1ff;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+#debug-panel .dbg-hint {
+  font-weight: 400;
+  color: #6b7890;
+}
+
+#debug-panel #dbg-state > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+#debug-panel .dbg-k {
+  color: #7b879b;
+}
+
+#debug-panel .dbg-v {
+  color: #e6ecf5;
+  text-align: right;
+  word-break: break-all;
+}
+
+#debug-panel .dbg-log-title {
+  margin: 8px 0 4px;
+  color: #7b879b;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+#debug-panel #dbg-log {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+#debug-panel .dbg-ok {
+  color: #67e0a3;
+}
+#debug-panel .dbg-warn {
+  color: #f4c66a;
+}
+#debug-panel .dbg-err {
+  color: #ff7a7a;
+}
+#debug-panel .dbg-info {
+  color: #9fb0c7;
+}

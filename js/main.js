@@ -18,6 +18,7 @@ import {
   attachVideoSource,
 } from "./videoSphere.js";
 import { DesktopControls } from "./desktopControls.js";
+import { initDiagnostics } from "./diagnostics.js";
 
 // --- DOM references --------------------------------------------------------
 const overlay = document.getElementById("overlay");
@@ -51,11 +52,15 @@ scene.add(videoSphere);
 
 // Attach the source (HLS via hls.js, or a plain MP4). Surface fatal stream
 // errors through the same overlay/toast path as other failures.
-attachVideoSource(video, config, (message) => {
+const { hls } = attachVideoSource(video, config, (message) => {
   overlayStatus.textContent = message;
   startBtn.disabled = false;
   showToast(message, 6000);
 });
+
+// Opt-in on-screen debugger (?debug=1) — useful for diagnosing the deployed
+// site on a headset where devtools aren't available. No-op otherwise.
+initDiagnostics(video, hls, config);
 
 // --- Desktop preview controls ---------------------------------------------
 const desktopControls = new DesktopControls(camera, renderer.domElement, config);
