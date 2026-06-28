@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>360° VR Video — WebXR Player</title>
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!--
+    Three.js is loaded from a CDN via an import map so the modules can use
+    bare specifiers (e.g. `import * as THREE from 'three'`). No build step,
+    no bundler — everything runs straight from static files.
+  -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- Poster / start overlay. Required because browsers block video
+       playback (especially with audio) until the user interacts. -->
+  <div id="overlay">
+    <div class="overlay-card">
+      <h1>360° VR Experience</h1>
+      <p id="overlay-status">Tap below to load the video.</p>
+      <button id="start-btn" type="button">▶ Start</button>
+      <p class="hint">
+        Desktop: click &amp; drag to look around.<br />
+        Quest / VR headset: press <strong>Enter VR</strong> after starting.
+      </p>
+    </div>
+  </div>
+
+  <!-- The "Enter VR" button is injected here by the WebXR helper. -->
+  <div id="vr-button-container"></div>
+
+  <!-- Non-fatal error / info toasts -->
+  <div id="toast" class="hidden"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

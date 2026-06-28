@@ -1,0 +1,19 @@
+# Large media — NOT committed to git (372 MB exceeds GitHub's 100 MB limit).
+# The optimized video ships as a GitHub Release asset and is hosted same-origin
+# alongside the deployed page. See HANDOFF.md.
+*.mp4
+*.mov
+*.m4v
+*.webm
+
+# Transcode / build logs
+transcode.log
+*.log
+
+# Local editor / tooling config
+.claude/
+
+# OS cruft
+Thumbs.db
+.DS_Store
+desktop.ini
