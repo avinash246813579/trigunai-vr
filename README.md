@@ -49,23 +49,50 @@ export const config = {
 Other tweakable options in `config.js`: `loop`, `muted`, sphere radius/segments,
 and desktop FOV / look sensitivity.
 
-### Current video & performance note
+### Video sources & encoding
 
-The project currently points at the local file **`mmun-bkk-360-test-1.mp4`**
-(H.264, 5760×2880 equirectangular, ~78 s). That source is **~200 Mbps / 1.8 GB**,
-which is far higher than needed for web/headset delivery:
+The master is **`mmun-bkk-360-test-1.mp4`** (H.264, 5760×2880 equirectangular,
+~78 s, ~200 Mbps / 1.8 GB) — far too heavy to stream directly. Two derived
+sources are used instead (both gitignored; shipped as GitHub Release assets):
 
-- **Quest 2** in particular may stutter — its H.264 decoder is near its limit at
-  5760-wide, and a 200 Mbps stream is heavy. Quest 3/Pro handle it better.
-- For smooth playback **and** a much smaller download, transcode before
-  deployment. A good target is roughly:
-  ```bash
-  ffmpeg -i mmun-bkk-360-test-1.mp4 -c:v libx264 -b:v 40M -maxrate 50M \
-    -bufsize 80M -vf scale=4096:2048 -movflags +faststart -c:a aac mmun-bkk-360-web.mp4
-  ```
-  (4096×2048 at ~40 Mbps is a strong quality/size balance for 360°; drop to
-  3840×1920 if you need to support older headsets.) `+faststart` moves the MP4
-  index to the front so it streams without a full download.
+**1. HLS adaptive stream (preferred — `hls/master.m3u8`).** Streams like YouTube:
+short segments at four quality levels, the player auto-switches to fit bandwidth,
+so it starts fast and doesn't stall. This is what `config.js` points at by
+default. Rebuild it from a master with:
+
+```bash
+mkdir -p hls
+ffmpeg -y -i mmun-bkk-360-test-1.mp4 \
+  -filter_complex "[0:v]split=4[a][b][c][d];\
+[a]scale=1280:640[v0];[b]scale=1920:960[v1];[c]scale=2880:1440[v2];[d]scale=4096:2048[v3]" \
+  -map "[v0]" -map "[v1]" -map "[v2]" -map "[v3]" -map 0:a -map 0:a -map 0:a -map 0:a \
+  -c:v libx264 -preset fast -pix_fmt yuv420p -g 120 -keyint_min 120 -sc_threshold 0 \
+  -force_key_frames "expr:gte(t,n_forced*4)" \
+  -b:v:0 2500k -maxrate:v:0 2675k -bufsize:v:0 3750k \
+  -b:v:1 5000k -maxrate:v:1 5350k -bufsize:v:1 7500k \
+  -b:v:2 10000k -maxrate:v:2 10700k -bufsize:v:2 15000k \
+  -b:v:3 20000k -maxrate:v:3 21400k -bufsize:v:3 30000k \
+  -c:a aac -b:a 128k -ac 2 \
+  -f hls -hls_time 4 -hls_playlist_type vod -hls_flags independent_segments \
+  -hls_segment_filename "hls/v%v_%03d.ts" -master_pl_name master.m3u8 \
+  -var_stream_map "v:0,a:0 v:1,a:1 v:2,a:2 v:3,a:3" "hls/v%v.m3u8"
+```
+
+The 4 s segments are keyframe-aligned across renditions so the player can switch
+quality cleanly. Adjust the bitrate ladder to taste — for 360° monoscopic video
+the top rung can sit lower than you'd expect (~20 Mbps at 4K still looks sharp).
+
+**2. Single-file MP4 fallback (`mmun-bkk-360-web.mp4`).** A simpler progressive
+file, only needed if you can't host HLS. It can stall on slow networks (fixed
+bitrate, no adaptation). Build it with:
+
+```bash
+ffmpeg -i mmun-bkk-360-test-1.mp4 -c:v libx264 -b:v 40M -maxrate 50M \
+  -bufsize 80M -vf scale=4096:2048 -movflags +faststart -c:a aac mmun-bkk-360-web.mp4
+```
+
+`+faststart` moves the MP4 index to the front so it streams without a full
+download. To use it, set `videoUrl` in `config.js` to the `.mp4` path.
 
 ---
 

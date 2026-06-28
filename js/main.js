@@ -12,7 +12,11 @@ import * as THREE from "three";
 import { VRButton } from "three/addons/webxr/VRButton.js";
 
 import { config } from "./config.js";
-import { createVideoElement, createVideoSphere } from "./videoSphere.js";
+import {
+  createVideoElement,
+  createVideoSphere,
+  attachVideoSource,
+} from "./videoSphere.js";
 import { DesktopControls } from "./desktopControls.js";
 
 // --- DOM references --------------------------------------------------------
@@ -44,6 +48,14 @@ document.body.appendChild(renderer.domElement);
 const video = createVideoElement(config);
 const videoSphere = createVideoSphere(video, config);
 scene.add(videoSphere);
+
+// Attach the source (HLS via hls.js, or a plain MP4). Surface fatal stream
+// errors through the same overlay/toast path as other failures.
+attachVideoSource(video, config, (message) => {
+  overlayStatus.textContent = message;
+  startBtn.disabled = false;
+  showToast(message, 6000);
+});
 
 // --- Desktop preview controls ---------------------------------------------
 const desktopControls = new DesktopControls(camera, renderer.domElement, config);

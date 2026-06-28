@@ -7,6 +7,15 @@
   <link rel="stylesheet" href="css/style.css" />
 
   <!--
+    hls.js enables adaptive-bitrate (HLS) streaming in the Quest Browser and
+    other Chromium browsers, which don't play .m3u8 natively but do support
+    Media Source Extensions. It attaches to the same <video> element the 360°
+    sphere reads from. Loaded before the app module so the global `Hls` exists.
+    (Only used when config.videoUrl ends in .m3u8; plain .mp4 ignores it.)
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.13/dist/hls.min.js"></script>
+
+  <!--
     Three.js is loaded from a CDN via an import map so the modules can use
     bare specifiers (e.g. `import * as THREE from 'three'`). No build step,
     no bundler — everything runs straight from static files.

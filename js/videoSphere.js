@@ -17,7 +17,8 @@ import * as THREE from "three";
 export function createVideoElement(config) {
   const video = document.createElement("video");
 
-  video.src = config.videoUrl;
+  // NOTE: the source is NOT set here — see attachVideoSource(), which picks
+  // between HLS (via hls.js) and a plain MP4 based on the URL.
   video.loop = config.loop;
   video.muted = config.muted;
   video.crossOrigin = "anonymous"; // allow textures from cross-origin hosts
@@ -30,6 +31,74 @@ export function createVideoElement(config) {
   video.setAttribute("webkit-playsinline", "");
 
   return video;
+}
+
+/**
+ * Attach the configured video source to the element.
+ *
+ * For an HLS (.m3u8) URL this wires up hls.js for adaptive-bitrate streaming
+ * (the Quest Browser can't play .m3u8 natively but supports the Media Source
+ * Extensions hls.js uses). For a plain .mp4 it just sets `video.src`.
+ *
+ * @param {HTMLVideoElement} video
+ * @param {object} config
+ * @param {(message: string) => void} [onError] - called with a human-readable
+ *        message if the stream fails fatally.
+ * @returns {{ hls: any | null }} the hls.js instance (or null for MP4/native).
+ */
+export function attachVideoSource(video, config, onError = () => {}) {
+  const url = config.videoUrl;
+  const isHls = /\.m3u8(\?.*)?$/i.test(url);
+
+  if (!isHls) {
+    video.src = url; // progressive MP4 (or any natively supported source)
+    return { hls: null };
+  }
+
+  // Safari / iOS can play HLS natively — prefer that and skip hls.js.
+  if (video.canPlayType("application/vnd.apple.mpegurl")) {
+    video.src = url;
+    return { hls: null };
+  }
+
+  // Chromium (Quest Browser, desktop Chrome/Edge): use hls.js over MSE.
+  if (typeof window.Hls !== "undefined" && window.Hls.isSupported()) {
+    const hls = new window.Hls({
+      // Keep full 360° detail: don't cap quality to the on-screen element size.
+      capLevelToPlayerSize: false,
+      // Buffer a healthy runway ahead so brief Wi-Fi dips don't cause stalls.
+      maxBufferLength: 30,
+      maxMaxBufferLength: 120,
+    });
+
+    hls.loadSource(url);
+    hls.attachMedia(video);
+
+    hls.on(window.Hls.Events.ERROR, (_evt, data) => {
+      if (!data.fatal) return; // hls.js auto-recovers non-fatal errors
+      switch (data.type) {
+        case window.Hls.ErrorTypes.NETWORK_ERROR:
+          hls.startLoad(); // try to recover a dropped connection
+          break;
+        case window.Hls.ErrorTypes.MEDIA_ERROR:
+          hls.recoverMediaError();
+          break;
+        default:
+          hls.destroy();
+          onError(
+            "Adaptive stream failed to load. Check the .m3u8 URL is reachable and CORS-enabled."
+          );
+      }
+    });
+
+    return { hls };
+  }
+
+  // No HLS support at all.
+  onError(
+    "This browser can't play the adaptive (HLS) stream. Try the Meta Quest Browser or Chrome/Edge."
+  );
+  return { hls: null };
 }
 
 /**

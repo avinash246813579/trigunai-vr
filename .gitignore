@@ -1,10 +1,17 @@
-# Large media — NOT committed to git (372 MB exceeds GitHub's 100 MB limit).
-# The optimized video ships as a GitHub Release asset and is hosted same-origin
-# alongside the deployed page. See HANDOFF.md.
+# Large media — NOT committed to git. The optimized video and the HLS stream
+# ship as GitHub Release assets and are hosted same-origin alongside the
+# deployed page. See HANDOFF.md.
 *.mp4
 *.mov
 *.m4v
 *.webm
+
+# HLS adaptive-streaming output (manifests + .ts segments) — shipped as a
+# zipped Release asset, placed next to index.html at deploy time.
+hls/
+*.ts
+*.m3u8
+*.zip
 
 # Transcode / build logs
 transcode.log

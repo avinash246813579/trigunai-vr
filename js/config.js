@@ -13,11 +13,17 @@
 
 export const config = {
   // The 360° equirectangular MP4 to play. Replace this with your own URL.
-  // Local file served alongside this project (relative to index.html). For
-  // production, the web team can swap this for the hosted (HTTPS/CORS) URL.
-  // Web-optimized 4096x2048 / ~40 Mbps build (see README). The original
-  // 5760x2880 / 200 Mbps master is mmun-bkk-360-test-1.mp4.
-  videoUrl: "mmun-bkk-360-web.mp4",
+  // Video source. Supports two kinds of URL:
+  //   - HLS adaptive stream (.m3u8)  -> streams like YouTube, no stalls (preferred)
+  //   - Progressive MP4 (.mp4)       -> single-file fallback
+  // Relative paths load from the same origin as the page (no CORS needed).
+  //
+  // HLS adaptive ladder (1280x640 -> 4096x2048). Built from the
+  // mmun-bkk-360-test-1.mp4 master; see README for the ffmpeg command.
+  videoUrl: "hls/master.m3u8",
+
+  // Single-file fallback if you ever need it:
+  // videoUrl: "mmun-bkk-360-web.mp4",
 
   // Loop the video when it reaches the end.
   loop: true,
